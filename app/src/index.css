@@ -1,0 +1,58 @@
+/* CSS @import must come before all other rules */
+@import '@solana/wallet-adapter-react-ui/styles.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: #020617; /* slate-950 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed;
+}
+
+/* Wallet adapter button overrides to match theme */
+.wallet-adapter-button {
+  border-radius: 0.75rem !important;
+  font-family: inherit !important;
+  font-size: 0.875rem !important;
+  padding: 0 1.25rem !important;
+  height: 2.5rem !important;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+  transition: all 0.2s ease !important;
+}
+.wallet-adapter-button:hover {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3) !important;
+}
+.wallet-adapter-button-trigger {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+}
+.wallet-adapter-modal-wrapper {
+  background: #0f172a !important;
+}
+.wallet-adapter-modal-button-close {
+  background: #1e293b !important;
+}

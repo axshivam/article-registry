@@ -1,0 +1,277 @@
+{
+  "address": "C2jQxSe2fxmWr92eRUPmn14w2MPn6kj4y2GmnLKa3tT3",
+  "metadata": {
+    "name": "crud_app",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "create_article_entry",
+      "docs": [
+        "Creates a new article entry as a PDA seeded by [title, owner].",
+        "The owner pays for rent and is permanently stored on the account.",
+        "Title is immutable after creation since it is part of the PDA seed."
+      ],
+      "discriminator": [
+        69,
+        72,
+        30,
+        159,
+        72,
+        183,
+        59,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "article_entry",
+          "docs": [
+            "The article PDA account, initialized fresh.",
+            "Seeded by [title, owner] to ensure each owner has a unique entry per title.",
+            "Space is calculated using `ArticleEntry::INIT_SPACE` plus the 8-byte discriminator."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "arg",
+                "path": "title"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "docs": [
+            "The signer who creates and owns this article. Pays for account rent."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Required by Anchor to initialize the PDA account."
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "delete_article_entry",
+      "docs": [
+        "Closes the article entry account and returns all lamports to the owner.",
+        "The `_title` parameter is only needed to derive and verify the correct",
+        "PDA; the `close = owner` constraint handles the actual lamport transfer."
+      ],
+      "discriminator": [
+        40,
+        232,
+        149,
+        253,
+        5,
+        50,
+        23,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "article_entry",
+          "docs": [
+            "The article PDA to close. The `close = owner` constraint transfers all",
+            "remaining lamports back to the owner and zeroes the account data.",
+            "`has_one = owner` ensures only the original creator can delete this entry."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "arg",
+                "path": "title"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "docs": [
+            "Receives the reclaimed lamports from the closed account."
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "article_entry"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_title",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "update_article_entry",
+      "docs": [
+        "Updates the description of an existing article entry.",
+        "The `_title` parameter is intentionally unused in the function body —",
+        "it is only required by the `UpdateEntry` accounts struct to derive the",
+        "correct PDA via the `#[instruction(title)]` attribute. Title itself is",
+        "immutable because changing it would yield a different PDA address."
+      ],
+      "discriminator": [
+        146,
+        136,
+        238,
+        126,
+        88,
+        28,
+        195,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "article_entry",
+          "docs": [
+            "The existing article PDA, derived from the same [title, owner] seeds.",
+            "`has_one = owner` ensures the signer matches the stored owner field,",
+            "preventing any other wallet from modifying this entry.",
+            "No `realloc` needed because `max_len` allocates the maximum size upfront."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "arg",
+                "path": "title"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "docs": [
+            "Must match `article_entry.owner`; enforced by the `has_one` constraint above."
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "article_entry"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_title",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ArticleEntry",
+      "discriminator": [
+        239,
+        149,
+        0,
+        188,
+        143,
+        81,
+        119,
+        201
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "TitleEmpty",
+      "msg": "Title cannot be empty"
+    },
+    {
+      "code": 6001,
+      "name": "TitleTooLong",
+      "msg": "Title exceeds the maximum length of 50 characters"
+    },
+    {
+      "code": 6002,
+      "name": "DescriptionEmpty",
+      "msg": "Description cannot be empty"
+    },
+    {
+      "code": 6003,
+      "name": "DescriptionTooLong",
+      "msg": "Description exceeds the maximum length of 2000 characters"
+    },
+    {
+      "code": 6004,
+      "name": "Unauthorized",
+      "msg": "You are not authorized to modify or delete this article"
+    }
+  ],
+  "types": [
+    {
+      "name": "ArticleEntry",
+      "docs": [
+        "On-chain state stored for each article entry."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "docs": [
+              "The public key of the wallet that created and owns this article."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "title",
+            "docs": [
+              "The article title. Max 50 characters.",
+              "Immutable after creation — it forms part of the PDA seed."
+            ],
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "docs": [
+              "The article body / description. Max 2000 characters."
+            ],
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ]
+}
