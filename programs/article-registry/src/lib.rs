@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("C2jQxSe2fxmWr92eRUPmn14w2MPn6kj4y2GmnLKa3tT3");
+declare_id!("3HghJSSrCCTuW63nhMintkNatfMsqEFgUAGvJNHtADMa");
 
 #[program]
 pub mod article_registry {
@@ -46,7 +46,7 @@ pub mod article_registry {
     /// published_date are immutable because title forms part of the PDA seed.
     pub fn update_article_entry(
         ctx: Context<UpdateEntry>,
-        _title: String,
+        title: String,
         description: String,
         content: String,
         references: Vec<String>,
@@ -71,7 +71,7 @@ pub mod article_registry {
     /// Closes the article entry account and returns all lamports to the owner.
     /// The `_title` parameter is only needed to derive and verify the correct
     /// PDA; the `close = owner` constraint handles the actual lamport transfer.
-    pub fn delete_article_entry(_ctx: Context<DeleteEntry>, _title: String) -> Result<()> {
+    pub fn delete_article_entry(_ctx: Context<DeleteEntry>, title: String) -> Result<()> {
         Ok(())
     }
 }

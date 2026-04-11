@@ -1,5 +1,5 @@
 {
-  "address": "C2jQxSe2fxmWr92eRUPmn14w2MPn6kj4y2GmnLKa3tT3",
+  "address": "3HghJSSrCCTuW63nhMintkNatfMsqEFgUAGvJNHtADMa",
   "metadata": {
     "name": "article_registry",
     "version": "0.1.0",
@@ -136,7 +136,7 @@
       ],
       "args": [
         {
-          "name": "_title",
+          "name": "title",
           "type": "string"
         }
       ]
@@ -197,7 +197,7 @@
       ],
       "args": [
         {
-          "name": "_title",
+          "name": "title",
           "type": "string"
         },
         {
