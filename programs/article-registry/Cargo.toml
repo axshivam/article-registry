@@ -1,12 +1,12 @@
 [package]
-name = "crud-app"
+name = "article-registry"
 version = "0.1.0"
-description = "Created with Anchor"
+description = "Article Registry — on-chain article storage built with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "crud_app"
+name = "article_registry"
 
 [features]
 default = []

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Article } from '../hooks/useCrudApp'
+import type { Article } from '../hooks/useArticleRegistry'
 
 interface ArticleCardProps {
   article: Article
@@ -7,23 +7,40 @@ interface ArticleCardProps {
   onDelete: (article: Article) => void
 }
 
+function formatDate(unixTs: number): string {
+  // Anchor returns i64 as a BN-like object; coerce to number safely
+  const ms = Number(unixTs) * 1000
+  if (!ms || isNaN(ms)) return '—'
+  return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(
+    new Date(ms),
+  )
+}
+
 export function ArticleCard({ article, onEdit, onDelete }: ArticleCardProps) {
   const [expanded, setExpanded] = useState(false)
-  const { title, description } = article.account
-  const isLong = description.length > 220
-  const displayText = !expanded && isLong ? description.slice(0, 220) + '…' : description
+  const { title, description, content, references, publishedDate } = article.account
+
+  const PREVIEW = 220
+  const isLong = content.length > PREVIEW
+  const displayContent = !expanded && isLong ? content.slice(0, PREVIEW) + '…' : content
 
   return (
     <article className="group relative flex flex-col bg-slate-900/70 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-5 hover:border-violet-500/40 hover:bg-slate-900/90 transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/10">
       {/* Top gradient line */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      {/* Title */}
-      <h3 className="text-white font-semibold text-base leading-snug mb-2.5 pr-2">{title}</h3>
+      {/* Title + published date */}
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <h3 className="text-white font-semibold text-base leading-snug">{title}</h3>
+        <span className="shrink-0 text-slate-500 text-xs mt-0.5">{formatDate(publishedDate)}</span>
+      </div>
 
-      {/* Description */}
+      {/* Abstract / description */}
+      <p className="text-slate-400 text-xs leading-relaxed mb-3 italic">{description}</p>
+
+      {/* Content */}
       <div className="flex-1">
-        <p className="text-slate-400 text-sm leading-relaxed">{displayText}</p>
+        <p className="text-slate-300 text-sm leading-relaxed">{displayContent}</p>
         {isLong && (
           <button
             onClick={() => setExpanded(e => !e)}
@@ -33,6 +50,31 @@ export function ArticleCard({ article, onEdit, onDelete }: ArticleCardProps) {
           </button>
         )}
       </div>
+
+      {/* References */}
+      {references.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-slate-700/30">
+          <p className="text-slate-500 text-xs font-medium mb-1.5">References</p>
+          <ul className="space-y-1">
+            {references.map((ref, i) => (
+              <li key={i} className="text-xs">
+                {ref.startsWith('http') ? (
+                  <a
+                    href={ref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-violet-400 hover:text-violet-300 truncate block transition-colors"
+                  >
+                    {ref}
+                  </a>
+                ) : (
+                  <span className="text-slate-400">{ref}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-slate-700/40">

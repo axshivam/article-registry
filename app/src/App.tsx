@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { ToastProvider } from './context/ToastContext'
-import { useCrudApp } from './hooks/useCrudApp'
+import { useArticleRegistry } from './hooks/useArticleRegistry'
 import { useNetworkStatus } from './hooks/useNetworkStatus'
 import { Header } from './components/Header'
 import { NetworkBanner } from './components/NetworkBanner'
@@ -12,12 +12,12 @@ import { ConfirmDeleteModal } from './components/ConfirmDeleteModal'
 import { OnboardingGuide } from './components/OnboardingGuide'
 import { FaucetWidget } from './components/FaucetWidget'
 import { Toasts } from './components/Toast'
-import type { Article } from './hooks/useCrudApp'
+import type { Article } from './hooks/useArticleRegistry'
 
 function ArticleApp() {
   const { publicKey } = useWallet()
   const { articles, loading, txPending, createArticle, updateArticle, deleteArticle, fetchArticles } =
-    useCrudApp()
+    useArticleRegistry()
   const { rpcStatus, balance } = useNetworkStatus()
 
   const [showCreate, setShowCreate] = useState(false)
@@ -262,7 +262,7 @@ function ArticleApp() {
   )
 }
 
-// Wrap at this level so useCrudApp (which uses useToast) has access to the provider
+// Wrap at this level so useArticleRegistry (which uses useToast) has access to the provider
 export default function App() {
   return (
     <ToastProvider>

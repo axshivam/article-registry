@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Article } from '../hooks/useCrudApp'
+import type { Article } from '../hooks/useArticleRegistry'
 
 interface ConfirmDeleteModalProps {
   article: Article | null

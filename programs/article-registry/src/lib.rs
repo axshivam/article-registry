@@ -3,47 +3,67 @@ use anchor_lang::prelude::*;
 declare_id!("C2jQxSe2fxmWr92eRUPmn14w2MPn6kj4y2GmnLKa3tT3");
 
 #[program]
-pub mod crud_app {
+pub mod article_registry {
     use super::*;
 
     /// Creates a new article entry as a PDA seeded by [title, owner].
     /// The owner pays for rent and is permanently stored on the account.
-    /// Title is immutable after creation since it is part of the PDA seed.
-     pub fn create_article_entry(
+    /// Title and published_date are immutable after creation.
+    pub fn create_article_entry(
         ctx: Context<CreateEntry>,
         title: String,
         description: String,
+        content: String,
+        references: Vec<String>,
     ) -> Result<()> {
         // Validate inputs before writing any state
         require!(!title.is_empty(), ArticleError::TitleEmpty);
         require!(title.len() <= 50, ArticleError::TitleTooLong);
         require!(!description.is_empty(), ArticleError::DescriptionEmpty);
         require!(description.len() <= 2000, ArticleError::DescriptionTooLong);
+        require!(!content.is_empty(), ArticleError::ContentEmpty);
+        require!(content.len() <= 5000, ArticleError::ContentTooLong);
+        require!(references.len() <= 5, ArticleError::TooManyReferences);
+        for r in &references {
+            require!(r.len() <= 200, ArticleError::ReferenceTooLong);
+        }
 
         let article_entry = &mut ctx.accounts.article_entry;
         article_entry.owner = ctx.accounts.owner.key();
         article_entry.title = title;
         article_entry.description = description;
+        article_entry.content = content;
+        article_entry.references = references;
+        article_entry.published_date = Clock::get()?.unix_timestamp;
 
         Ok(())
     }
 
-    /// Updates the description of an existing article entry.
+    /// Updates the mutable fields of an existing article entry.
     /// The `_title` parameter is intentionally unused in the function body —
     /// it is only required by the `UpdateEntry` accounts struct to derive the
-    /// correct PDA via the `#[instruction(title)]` attribute. Title itself is
-    /// immutable because changing it would yield a different PDA address.
+    /// correct PDA via the `#[instruction(title)]` attribute. Title and
+    /// published_date are immutable because title forms part of the PDA seed.
     pub fn update_article_entry(
         ctx: Context<UpdateEntry>,
         _title: String,
         description: String,
+        content: String,
+        references: Vec<String>,
     ) -> Result<()> {
-        // Validate the new description before overwriting stored data
         require!(!description.is_empty(), ArticleError::DescriptionEmpty);
         require!(description.len() <= 2000, ArticleError::DescriptionTooLong);
+        require!(!content.is_empty(), ArticleError::ContentEmpty);
+        require!(content.len() <= 5000, ArticleError::ContentTooLong);
+        require!(references.len() <= 5, ArticleError::TooManyReferences);
+        for r in &references {
+            require!(r.len() <= 200, ArticleError::ReferenceTooLong);
+        }
 
         let article_entry = &mut ctx.accounts.article_entry;
         article_entry.description = description;
+        article_entry.content = content;
+        article_entry.references = references;
 
         Ok(())
     }
@@ -134,12 +154,23 @@ pub struct ArticleEntry {
     #[max_len(50)]
     pub title: String,
 
-    /// The article body / description. Max 2000 characters.
+    /// Short abstract / summary of the article. Max 2000 characters.
     #[max_len(2000)]
     pub description: String,
+
+    /// Full article content / body. Max 5000 characters.
+    #[max_len(5000)]
+    pub content: String,
+
+    /// Optional reference URLs or citations. Up to 5 entries, each max 200 characters.
+    #[max_len(5, 200)]
+    pub references: Vec<String>,
+
+    /// Unix timestamp (seconds) set at creation time. Immutable after creation.
+    pub published_date: i64,
 }
 
-/// Custom error codes for the crud-app program.
+/// Custom error codes for the article-registry program.
 /// Anchor assigns codes starting at 6000 for user-defined errors.
 #[error_code]
 pub enum ArticleError {
@@ -154,6 +185,18 @@ pub enum ArticleError {
 
     #[msg("Description exceeds the maximum length of 2000 characters")]
     DescriptionTooLong,
+
+    #[msg("Content cannot be empty")]
+    ContentEmpty,
+
+    #[msg("Content exceeds the maximum length of 5000 characters")]
+    ContentTooLong,
+
+    #[msg("References list exceeds the maximum of 5 entries")]
+    TooManyReferences,
+
+    #[msg("A reference entry exceeds the maximum length of 200 characters")]
+    ReferenceTooLong,
 
     #[msg("You are not authorized to modify or delete this article")]
     Unauthorized,

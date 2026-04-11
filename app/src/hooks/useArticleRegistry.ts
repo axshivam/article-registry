@@ -5,7 +5,7 @@ import type { PublicKey } from '@solana/web3.js'
 import { useToast } from '../context/ToastContext'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore — JSON import, types derived at call sites
-import IDL from '../idl/crud_app.json'
+import IDL from '../idl/article_registry.json'
 
 export interface Article {
   publicKey: PublicKey
@@ -13,6 +13,9 @@ export interface Article {
     owner: PublicKey
     title: string
     description: string
+    content: string
+    references: string[]
+    publishedDate: number
   }
 }
 
@@ -30,7 +33,7 @@ function extractErrorMessage(err: unknown): string {
   return 'Unknown error'
 }
 
-export function useCrudApp() {
+export function useArticleRegistry() {
   const { connection } = useConnection()
   const wallet = useAnchorWallet()
   const { addToast } = useToast()
@@ -81,13 +84,13 @@ export function useCrudApp() {
   }, [getProgram, wallet, addToast])
 
   const createArticle = useCallback(
-    async (title: string, description: string) => {
+    async (title: string, description: string, content: string, references: string[]) => {
       const program = getProgram()
       if (!program) return
       setTxPending(true)
       try {
         const tx = await program.methods
-          .createArticleEntry(title, description)
+          .createArticleEntry(title, description, content, references)
           .rpc()
         addToast(`Article published! Tx: ${tx.slice(0, 8)}…`, 'success')
         await fetchArticles()
@@ -103,13 +106,13 @@ export function useCrudApp() {
   )
 
   const updateArticle = useCallback(
-    async (title: string, description: string) => {
+    async (title: string, description: string, content: string, references: string[]) => {
       const program = getProgram()
       if (!program) return
       setTxPending(true)
       try {
         const tx = await program.methods
-          .updateArticleEntry(title, description)
+          .updateArticleEntry(title, description, content, references)
           .rpc()
         addToast(`Article updated! Tx: ${tx.slice(0, 8)}…`, 'success')
         await fetchArticles()

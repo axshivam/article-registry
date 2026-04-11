@@ -1,10 +1,10 @@
 {
   "address": "C2jQxSe2fxmWr92eRUPmn14w2MPn6kj4y2GmnLKa3tT3",
   "metadata": {
-    "name": "crud_app",
+    "name": "article_registry",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "Created with Anchor"
+    "description": "Article Registry — on-chain article storage built with Anchor"
   },
   "instructions": [
     {
@@ -12,7 +12,7 @@
       "docs": [
         "Creates a new article entry as a PDA seeded by [title, owner].",
         "The owner pays for rent and is permanently stored on the account.",
-        "Title is immutable after creation since it is part of the PDA seed."
+        "Title and published_date are immutable after creation."
       ],
       "discriminator": [
         69,
@@ -70,6 +70,16 @@
         {
           "name": "description",
           "type": "string"
+        },
+        {
+          "name": "content",
+          "type": "string"
+        },
+        {
+          "name": "references",
+          "type": {
+            "vec": "string"
+          }
         }
       ]
     },
@@ -134,11 +144,11 @@
     {
       "name": "update_article_entry",
       "docs": [
-        "Updates the description of an existing article entry.",
+        "Updates the mutable fields of an existing article entry.",
         "The `_title` parameter is intentionally unused in the function body —",
         "it is only required by the `UpdateEntry` accounts struct to derive the",
-        "correct PDA via the `#[instruction(title)]` attribute. Title itself is",
-        "immutable because changing it would yield a different PDA address."
+        "correct PDA via the `#[instruction(title)]` attribute. Title and",
+        "published_date are immutable because title forms part of the PDA seed."
       ],
       "discriminator": [
         146,
@@ -193,6 +203,16 @@
         {
           "name": "description",
           "type": "string"
+        },
+        {
+          "name": "content",
+          "type": "string"
+        },
+        {
+          "name": "references",
+          "type": {
+            "vec": "string"
+          }
         }
       ]
     }
@@ -235,6 +255,26 @@
     },
     {
       "code": 6004,
+      "name": "ContentEmpty",
+      "msg": "Content cannot be empty"
+    },
+    {
+      "code": 6005,
+      "name": "ContentTooLong",
+      "msg": "Content exceeds the maximum length of 5000 characters"
+    },
+    {
+      "code": 6006,
+      "name": "TooManyReferences",
+      "msg": "References list exceeds the maximum of 5 entries"
+    },
+    {
+      "code": 6007,
+      "name": "ReferenceTooLong",
+      "msg": "A reference entry exceeds the maximum length of 200 characters"
+    },
+    {
+      "code": 6008,
       "name": "Unauthorized",
       "msg": "You are not authorized to modify or delete this article"
     }
@@ -266,9 +306,32 @@
           {
             "name": "description",
             "docs": [
-              "The article body / description. Max 2000 characters."
+              "Short abstract / summary of the article. Max 2000 characters."
             ],
             "type": "string"
+          },
+          {
+            "name": "content",
+            "docs": [
+              "Full article content / body. Max 5000 characters."
+            ],
+            "type": "string"
+          },
+          {
+            "name": "references",
+            "docs": [
+              "Optional reference URLs or citations. Up to 5 entries, each max 200 characters."
+            ],
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "published_date",
+            "docs": [
+              "Unix timestamp (seconds) set at creation time. Immutable after creation."
+            ],
+            "type": "i64"
           }
         ]
       }

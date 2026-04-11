@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program, AnchorError } from "@coral-xyz/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { CrudApp } from "../target/types/crud_app";
+import { ArticleRegistry } from "../target/types/article_registry";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -26,11 +26,11 @@ function anchorErrCode(err: unknown): string {
 
 // ─── Test suite ─────────────────────────────────────────────────────────────
 
-describe("crud-app", () => {
+describe("article-registry", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.CrudApp as Program<CrudApp>;
+  const program = anchor.workspace.ArticleRegistry as Program<ArticleRegistry>;
   const owner = provider.wallet as anchor.Wallet;
 
   /**
@@ -45,6 +45,8 @@ describe("crud-app", () => {
   const t = (base: string) => `${base}-${SUFFIX}`;      // title factory
 
   const DESCRIPTION = "This is a test description for the article.";
+  const CONTENT = "This is the full test content body of the article.";
+  const REFERENCES: string[] = [];
 
   /** Create an article entry. */
   async function createArticle(
@@ -54,7 +56,7 @@ describe("crud-app", () => {
   ): Promise<string> {
     const wallet = signer ?? owner;
     return program.methods
-      .createArticleEntry(title, description)
+      .createArticleEntry(title, description, CONTENT, REFERENCES)
       .accounts({ owner: wallet.publicKey })
       .signers(signer ? [signer.payer] : [])
       .rpc();
@@ -121,7 +123,7 @@ describe("crud-app", () => {
 
       await createArticle(title, "Owner 1 description");
       await program.methods
-        .createArticleEntry(title, "Owner 2 description")
+        .createArticleEntry(title, "Owner 2 description", CONTENT, REFERENCES)
         .accounts({ owner: secondKeypair.publicKey })
         .signers([secondKeypair])
         .rpc();
@@ -225,7 +227,7 @@ describe("crud-app", () => {
     it("updates the description and persists the new value", async () => {
       const newDesc = "Updated description content.";
       await program.methods
-        .updateArticleEntry(UPDATE_TITLE, newDesc)
+        .updateArticleEntry(UPDATE_TITLE, newDesc, CONTENT, REFERENCES)
         .accounts({ owner: owner.publicKey })
         .rpc();
 
@@ -236,7 +238,7 @@ describe("crud-app", () => {
     it("preserves the title and owner after an update", async () => {
       const newDesc = "Another updated description.";
       await program.methods
-        .updateArticleEntry(UPDATE_TITLE, newDesc)
+        .updateArticleEntry(UPDATE_TITLE, newDesc, CONTENT, REFERENCES)
         .accounts({ owner: owner.publicKey })
         .rpc();
 
@@ -249,7 +251,7 @@ describe("crud-app", () => {
       for (let i = 1; i <= 3; i++) {
         const desc = `Update round ${i}`;
         await program.methods
-          .updateArticleEntry(UPDATE_TITLE, desc)
+          .updateArticleEntry(UPDATE_TITLE, desc, CONTENT, REFERENCES)
           .accounts({ owner: owner.publicKey })
           .rpc();
 
@@ -261,7 +263,7 @@ describe("crud-app", () => {
     it("rejects an empty new description (DescriptionEmpty)", async () => {
       try {
         await program.methods
-          .updateArticleEntry(UPDATE_TITLE, "")
+          .updateArticleEntry(UPDATE_TITLE, "", CONTENT, REFERENCES)
           .accounts({ owner: owner.publicKey })
           .rpc();
         assert.fail("Expected DescriptionEmpty error");
@@ -274,7 +276,7 @@ describe("crud-app", () => {
       // Same SDK encoding limitation as create: rejected client-side.
       try {
         await program.methods
-          .updateArticleEntry(UPDATE_TITLE, "F".repeat(2001))
+          .updateArticleEntry(UPDATE_TITLE, "F".repeat(2001), CONTENT, REFERENCES)
           .accounts({ owner: owner.publicKey })
           .rpc();
         assert.fail("Expected rejection for description > 2000 chars");
@@ -286,7 +288,7 @@ describe("crud-app", () => {
     it("accepts a large description update within transaction limits", async () => {
       const largeDesc = "G".repeat(400);
       await program.methods
-        .updateArticleEntry(UPDATE_TITLE, largeDesc)
+        .updateArticleEntry(UPDATE_TITLE, largeDesc, CONTENT, REFERENCES)
         .accounts({ owner: owner.publicKey })
         .rpc();
 
@@ -302,7 +304,7 @@ describe("crud-app", () => {
 
       try {
         await program.methods
-          .updateArticleEntry(UPDATE_TITLE, "Hacked!")
+          .updateArticleEntry(UPDATE_TITLE, "Hacked!", CONTENT, REFERENCES)
           .accountsPartial({ articleEntry: articlePda, owner: secondKeypair.publicKey })
           .signers([secondKeypair])
           .rpc();

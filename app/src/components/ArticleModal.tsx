@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Article } from '../hooks/useCrudApp'
+import type { Article } from '../hooks/useArticleRegistry'
 
 interface ArticleModalProps {
   mode: 'create' | 'edit'
@@ -7,8 +7,8 @@ interface ArticleModalProps {
   isOpen: boolean
   txPending: boolean
   onClose: () => void
-  onCreate: (title: string, description: string) => Promise<void>
-  onUpdate: (title: string, description: string) => Promise<void>
+  onCreate: (title: string, description: string, content: string, references: string[]) => Promise<void>
+  onUpdate: (title: string, description: string, content: string, references: string[]) => Promise<void>
 }
 
 export function ArticleModal({
@@ -22,6 +22,8 @@ export function ArticleModal({
 }: ArticleModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [content, setContent] = useState('')
+  const [refsText, setRefsText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const descRef = useRef<HTMLTextAreaElement>(null)
@@ -31,22 +33,34 @@ export function ArticleModal({
     if (mode === 'edit' && article) {
       setTitle(article.account.title)
       setDescription(article.account.description)
+      setContent(article.account.content)
+      setRefsText(article.account.references.join('\n'))
       setTimeout(() => descRef.current?.focus(), 60)
     } else {
       setTitle('')
       setDescription('')
+      setContent('')
+      setRefsText('')
       setTimeout(() => titleRef.current?.focus(), 60)
     }
   }, [isOpen, mode, article])
 
+  const parseReferences = (): string[] =>
+    refsText
+      .split('\n')
+      .map(r => r.trim())
+      .filter(r => r.length > 0)
+      .slice(0, 5)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
+    const refs = parseReferences()
     try {
       if (mode === 'create') {
-        await onCreate(title.trim(), description.trim())
+        await onCreate(title.trim(), description.trim(), content.trim(), refs)
       } else {
-        await onUpdate(title.trim(), description.trim())
+        await onUpdate(title.trim(), description.trim(), content.trim(), refs)
       }
       onClose()
     } catch {
@@ -62,6 +76,7 @@ export function ArticleModal({
 
   const isPending = txPending || submitting
   const isCreate = mode === 'create'
+  const refCount = parseReferences().length
 
   if (!isOpen) return null
 
@@ -70,14 +85,14 @@ export function ArticleModal({
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
       onClick={handleBackdropClick}
     >
-      <div className="bg-slate-900 border border-slate-700/80 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg animate-slide-up">
+      <div className="bg-slate-900 border border-slate-700/80 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92dvh] flex flex-col animate-slide-up">
         {/* Drag indicator (mobile) */}
         <div className="flex justify-center pt-3 sm:hidden">
           <div className="w-10 h-1 rounded-full bg-slate-600" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 sm:pt-6 border-b border-slate-700/50">
+        <div className="flex items-center justify-between px-6 py-4 sm:pt-6 border-b border-slate-700/50 shrink-0">
           <div className="flex items-center gap-3">
             <div
               className={`w-8 h-8 rounded-lg flex items-center justify-center ${
@@ -111,7 +126,7 @@ export function ArticleModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit} className="overflow-y-auto px-6 py-5 space-y-4 flex-1">
           {/* Title field */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
@@ -141,7 +156,7 @@ export function ArticleModal({
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-slate-300 text-sm font-medium">
-                Description <span className="text-red-400">*</span>
+                Abstract / Summary <span className="text-red-400">*</span>
               </label>
               <span className={`text-xs ${description.length > 1900 ? 'text-amber-400' : 'text-slate-500'}`}>
                 {description.length}/2000
@@ -151,12 +166,51 @@ export function ArticleModal({
               ref={descRef}
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Write your article content here…"
+              placeholder="A brief summary of the article…"
               maxLength={2000}
               required
-              rows={6}
+              rows={3}
               className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-600/70 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/60 resize-none transition-all"
             />
+          </div>
+
+          {/* Content field */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-slate-300 text-sm font-medium">
+                Content <span className="text-red-400">*</span>
+              </label>
+              <span className={`text-xs ${content.length > 4700 ? 'text-amber-400' : 'text-slate-500'}`}>
+                {content.length}/5000
+              </span>
+            </div>
+            <textarea
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="Full article body / content…"
+              maxLength={5000}
+              required
+              rows={7}
+              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-600/70 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/60 resize-none transition-all"
+            />
+          </div>
+
+          {/* References field */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-slate-300 text-sm font-medium">References</label>
+              <span className={`text-xs ${refCount >= 5 ? 'text-amber-400' : 'text-slate-500'}`}>
+                {refCount}/5
+              </span>
+            </div>
+            <textarea
+              value={refsText}
+              onChange={e => setRefsText(e.target.value)}
+              placeholder={"One reference per line (URL or citation)…\nhttps://example.com/paper\nhttps://solana.com/docs"}
+              rows={3}
+              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-600/70 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/60 resize-none transition-all"
+            />
+            <p className="text-slate-500 text-xs mt-1">Up to 5 references, each max 200 characters.</p>
           </div>
 
           {/* Action buttons */}
@@ -171,7 +225,7 @@ export function ArticleModal({
             </button>
             <button
               type="submit"
-              disabled={isPending || !title.trim() || !description.trim()}
+              disabled={isPending || !title.trim() || !description.trim() || !content.trim()}
               className="flex-1 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-all text-sm flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20"
             >
               {isPending ? (
