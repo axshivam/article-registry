@@ -30,7 +30,7 @@ export function Header({ onRefresh, articleCount, loading, onGuide, balance }: H
             </div>
             <div>
               <h1 className="text-white font-bold text-base leading-none">Solana Articles</h1>
-              <p className="text-slate-500 text-xs mt-0.5">On-chain CRUD dApp</p>
+              <p className="text-slate-500 text-xs mt-0.5">On-chain ARTICLE REGISTRY dApp</p>
             </div>
           </div>
 
