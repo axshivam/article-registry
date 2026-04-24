@@ -3,6 +3,7 @@ import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react'
 import { AnchorProvider, Program } from '@coral-xyz/anchor'
 import type { PublicKey } from '@solana/web3.js'
 import { useToast } from '../context/ToastContext'
+import { getExplorerUrl } from '../config'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore — JSON import, types derived at call sites
 import IDL from '../idl/article_registry.json'
@@ -92,7 +93,7 @@ export function useArticleRegistry() {
         const tx = await program.methods
           .createArticleEntry(title, description, content, references)
           .rpc()
-        addToast(`Article published! Tx: ${tx.slice(0, 8)}…`, 'success')
+        addToast(`Article published! Tx: ${tx.slice(0, 8)}…`, 'success', getExplorerUrl('tx', tx))
         await fetchArticles()
       } catch (err) {
         console.error('createArticle error:', err)
@@ -114,7 +115,7 @@ export function useArticleRegistry() {
         const tx = await program.methods
           .updateArticleEntry(title, description, content, references)
           .rpc()
-        addToast(`Article updated! Tx: ${tx.slice(0, 8)}…`, 'success')
+        addToast(`Article updated! Tx: ${tx.slice(0, 8)}…`, 'success', getExplorerUrl('tx', tx))
         await fetchArticles()
       } catch (err) {
         console.error('updateArticle error:', err)
@@ -136,7 +137,7 @@ export function useArticleRegistry() {
         const tx = await program.methods
           .deleteArticleEntry(title)
           .rpc()
-        addToast(`Article deleted! Tx: ${tx.slice(0, 8)}…`, 'success')
+        addToast(`Article deleted! Tx: ${tx.slice(0, 8)}…`, 'success', getExplorerUrl('tx', tx))
         await fetchArticles()
       } catch (err) {
         console.error('deleteArticle error:', err)

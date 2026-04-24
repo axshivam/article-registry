@@ -13,6 +13,14 @@ export const endpoint: string = rpcUrlEnv ?? clusterApiUrl(networkEnv)
 /** True when the app is on a non-production cluster (airdrop allowed). */
 export const isTestNet = cluster === 'devnet' || cluster === 'testnet'
 
+/** Builds a Solana Explorer URL for a transaction or account address. */
+export function getExplorerUrl(type: 'tx' | 'address', value: string): string {
+  const base = 'https://explorer.solana.com'
+  const path = type === 'tx' ? `/tx/${value}` : `/address/${value}`
+  const clusterParam = cluster !== 'mainnet-beta' ? `?cluster=${cluster}` : ''
+  return `${base}${path}${clusterParam}`
+}
+
 // ── Human-readable labels & colours per cluster ──────────────────────────────
 export const CLUSTER_META: Record<
   AppCluster,

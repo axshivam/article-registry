@@ -30,7 +30,24 @@ function ToastItem({ toast }: { toast: Toast }) {
       <span className={`text-base font-bold mt-0.5 w-4 shrink-0 text-center ${ICON_COLORS[toast.type]}`}>
         {ICONS[toast.type]}
       </span>
-      <p className="flex-1 text-sm leading-relaxed break-words">{toast.message}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm leading-relaxed break-words">{toast.message}</p>
+        {toast.explorerUrl && (
+          <a
+            href={toast.explorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs mt-1 opacity-75 hover:opacity-100 underline underline-offset-2 transition-opacity"
+          >
+            View on Explorer
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </a>
+        )}
+      </div>
       <button
         onClick={() => removeToast(toast.id)}
         className="shrink-0 ml-1 text-lg leading-none opacity-50 hover:opacity-100 transition-opacity mt-0.5"

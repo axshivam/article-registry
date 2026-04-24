@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Article } from '../hooks/useArticleRegistry'
+import { getExplorerUrl } from '../config'
 
 interface ArticleCardProps {
   article: Article
@@ -81,9 +82,15 @@ export function ArticleCard({ article, onEdit, onDelete }: ArticleCardProps) {
         {/* PDA address badge */}
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-[#14F195] shadow-sm shadow-emerald-400/50" />
-          <span className="text-slate-500 text-xs font-mono tracking-tight">
+          <a
+            href={getExplorerUrl('address', article.publicKey.toBase58())}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-500 hover:text-emerald-400 text-xs font-mono tracking-tight transition-colors"
+            title={article.publicKey.toBase58()}
+          >
             {article.publicKey.toBase58().slice(0, 6)}…{article.publicKey.toBase58().slice(-4)}
-          </span>
+          </a>
         </div>
 
         {/* Action buttons */}

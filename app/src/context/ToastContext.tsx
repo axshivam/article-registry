@@ -6,11 +6,12 @@ export interface Toast {
   id: number
   message: string
   type: ToastType
+  explorerUrl?: string
 }
 
 interface ToastContextValue {
   toasts: Toast[]
-  addToast: (message: string, type?: ToastType) => void
+  addToast: (message: string, type?: ToastType, explorerUrl?: string) => void
   removeToast: (id: number) => void
 }
 
@@ -26,9 +27,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const addToast = useCallback(
-    (message: string, type: ToastType = 'info') => {
+    (message: string, type: ToastType = 'info', explorerUrl?: string) => {
       const id = nextId++
-      setToasts(prev => [...prev, { id, message, type }])
+      setToasts(prev => [...prev, { id, message, type, explorerUrl }])
       setTimeout(() => removeToast(id), 4500)
     },
     [removeToast],
